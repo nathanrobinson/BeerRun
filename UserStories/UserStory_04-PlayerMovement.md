@@ -8,7 +8,7 @@ As a player, I want to be able to move my character left and right (with restric
 - [ ] Player can move left (backward) but only to screen edge without scrolling
 - [ ] Movement feels responsive and appropriate for 8-bit platformer
 - [ ] Player movement is constrained by level boundaries
-- [ ] Input system supports both keyboard and touch controls for iOS
+- [ ] Input system supports keyboard, touch controls for iOS, and game controllers
 - [ ] Movement animations play appropriately (idle, running)
 - [ ] Player cannot move through solid objects
 
@@ -52,8 +52,21 @@ public class PlayerMovement : MonoBehaviour
         // Keyboard input
         movementInput.x = Input.GetAxisRaw("Horizontal");
         
+        // Game controller input
+        HandleControllerInput();
+        
         // Touch input for iOS
         HandleTouchInput();
+    }
+    
+    private void HandleControllerInput()
+    {
+        // Check for game controller input (gamepad)
+        float controllerInput = Input.GetAxisRaw("Horizontal");
+        if (Mathf.Abs(controllerInput) > 0.1f) // Deadzone
+        {
+            movementInput.x = controllerInput;
+        }
     }
     
     private void HandleTouchInput()
@@ -123,6 +136,8 @@ public class InputManager : MonoBehaviour
     [SerializeField] private float touchSensitivity = 0.5f;
     [SerializeField] private bool enableKeyboardInput = true;
     [SerializeField] private bool enableTouchInput = true;
+    [SerializeField] private bool enableControllerInput = true;
+    [SerializeField] private float controllerDeadzone = 0.1f;
     
     public Vector2 MovementInput { get; private set; }
     public bool JumpInput { get; private set; }
@@ -146,9 +161,22 @@ public class InputManager : MonoBehaviour
     private void Update()
     {
         HandleKeyboardInput();
+        HandleControllerInput();
         HandleTouchInput();
         
         OnMovementChanged?.Invoke(MovementInput);
+    }
+    
+    private void HandleControllerInput()
+    {
+        if (!enableControllerInput) return;
+        
+        // Check for game controller input (gamepad)
+        float controllerInput = Input.GetAxisRaw("Horizontal");
+        if (Mathf.Abs(controllerInput) > controllerDeadzone)
+        {
+            MovementInput = new Vector2(controllerInput, 0);
+        }
     }
 }
 ```
@@ -484,9 +512,43 @@ public class MovementConstraints : MonoBehaviour
    }
    ```
 
+### Game Controller Tests
+1. **Controller Input Handling**
+   ```csharp
+   [Test]
+   public void When_ControllerMovedRight_Should_MovePlayerRight()
+   {
+       // Arrange
+       var player = CreatePlayerWithMovement();
+       var inputManager = CreateInputManager();
+       
+       // Act
+       SimulateControllerInput(1.0f); // Right stick
+       
+       // Assert
+       Assert.AreEqual(Vector2.right, inputManager.MovementInput);
+   }
+   ```
+
+2. **Controller Deadzone**
+   ```csharp
+   [Test]
+   public void When_ControllerInputBelowDeadzone_Should_NotMove()
+   {
+       // Arrange
+       var inputManager = CreateInputManager();
+       
+       // Act
+       SimulateControllerInput(0.05f); // Below deadzone
+       
+       // Assert
+       Assert.AreEqual(Vector2.zero, inputManager.MovementInput);
+   }
+   ```
+
 ## Definition of Done
 - [ ] PlayerMovement component implemented and tested
-- [ ] Input system supports both keyboard and touch
+- [ ] Input system supports keyboard, touch, and game controller input
 - [ ] Movement constraints properly enforce boundaries
 - [ ] Player can move right without restrictions
 - [ ] Player cannot move left beyond screen edge
@@ -498,6 +560,7 @@ public class MovementConstraints : MonoBehaviour
 - [ ] Edge case tests demonstrate robust handling
 - [ ] Performance tests meet target benchmarks
 - [ ] Touch input works correctly on iOS devices
+- [ ] Game controller input works with proper deadzone handling
 
 ## Dependencies
 - UserStory_02-BasicPlayerCharacter (completed)
@@ -516,5 +579,6 @@ public class MovementConstraints : MonoBehaviour
 ## Notes
 - Movement system is foundation for all player interactions
 - Touch input implementation should feel natural for mobile players
+- Game controller support enhances accessibility and player choice
 - Consider adding haptic feedback for iOS devices
 - Movement parameters should be easily tunable for game feel iteration
