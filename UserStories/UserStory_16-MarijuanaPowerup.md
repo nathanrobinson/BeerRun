@@ -11,7 +11,8 @@ As a player, I want to occasionally find marijuana powerups that make me tempora
 - [ ] Powerup has limited duration with visual countdown
 - [ ] Clear visual effects indicate invincible state
 - [ ] Audio feedback for powerup collection and activation
-- [ ] Powerup does not affect environmental hazards (cars, manholes)
+- [ ] Player becomes invincible to cars, curbs, and shrubs during powerup
+- [ ] Player remains vulnerable to falling off level (manholes, ditches)
 
 ## Detailed Implementation Requirements
 
@@ -776,7 +777,7 @@ public class PowerupSpawner : MonoBehaviour
 2. **Environmental Hazard Tests**
    ```csharp
    [Test]
-   public void When_InvinciblePlayerHitsEnvironmentalHazard_Should_StillTakeDamage()
+   public void When_InvinciblePlayerHitsCarCurbOrShrub_Should_NotTakeDamage()
    {
        // Arrange
        var player = CreatePlayerWithInvincibilitySystem();
@@ -788,7 +789,24 @@ public class PowerupSpawner : MonoBehaviour
        car.HandlePlayerCollision(player);
        
        // Assert
-       // Player should still be affected by environmental hazards
+       // Player should be invincible to cars, curbs, and shrubs
+       Assert.IsFalse(player.IsDead || player.IsInjured);
+   }
+   
+   [Test]
+   public void When_InvinciblePlayerFallsInManhole_Should_StillTakeDamage()
+   {
+       // Arrange
+       var player = CreatePlayerWithInvincibilitySystem();
+       var manhole = CreateManholeObstacle();
+       var invincibilitySystem = player.GetComponent<PlayerInvincibilitySystem>();
+       invincibilitySystem.ActivateInvincibility(10f, InvincibilityType.Marijuana);
+       
+       // Act
+       manhole.HandlePlayerCollision(player);
+       
+       // Assert
+       // Player should still be vulnerable to falling off level
        Assert.IsTrue(player.IsDead || player.IsInjured);
    }
    ```
@@ -819,7 +837,8 @@ public class PowerupSpawner : MonoBehaviour
 - [ ] Player invincibility system functional with timer
 - [ ] Safe enemy interaction during invincibility
 - [ ] Money collection from enemies works during powerup
-- [ ] Environmental hazards still affect invincible player
+- [ ] Player invincible to cars, curbs, and shrubs during powerup
+- [ ] Player remains vulnerable to manholes and falling hazards
 - [ ] Visual and audio feedback for powerup states
 - [ ] Powerup lifetime and despawn mechanics
 - [ ] All unit tests pass with 100% coverage
@@ -841,12 +860,13 @@ public class PowerupSpawner : MonoBehaviour
 - **Risk**: Invincibility effects are unclear
   - **Mitigation**: Strong visual feedback and UI indicators
 - **Risk**: Players exploit powerup mechanics
-  - **Mitigation**: Environmental hazards still apply
+  - **Mitigation**: Falling hazards like manholes still apply
 
 ## Notes
 - Marijuana powerup adds strategic power fantasy element
 - Rare spawning maintains excitement and value
-- Environmental hazards maintain game challenge
+- Invincibility to cars/curbs/shrubs provides meaningful benefit
+- Vulnerability to manholes/falling maintains challenge balance
 - Clear visual feedback prevents confusion
 - Limited duration creates urgency and planning
 - Theme-appropriate powerup fits game's irreverent tone

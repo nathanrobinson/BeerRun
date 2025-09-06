@@ -8,7 +8,7 @@ As a player, I want to be able to make my character jump so that I can avoid obs
 - [ ] Player can only jump when grounded (no double jumping)
 - [ ] Jump height and duration feel appropriate for 8-bit platformer
 - [ ] Jump input responds immediately for tight controls
-- [ ] Jumping works with both keyboard and touch input
+- [ ] Jumping works with keyboard, touch input, and game controllers
 - [ ] Jump animation plays correctly
 - [ ] Gravity affects player realistically during jump
 - [ ] Player can control horizontal movement while jumping
@@ -85,8 +85,11 @@ public class PlayerJump : MonoBehaviour
     
     private void HandleJumpInput()
     {
-        // Jump input buffering - register jump input slightly before landing
-        if (Input.GetButtonDown("Jump") || GetTouchJumpInput())
+        // Jump input buffering - register jump input from any source
+        bool jumpPressed = Input.GetButtonDown("Jump") || GetTouchJumpInput() || GetControllerJumpInput();
+        bool jumpReleased = Input.GetButtonUp("Jump") || GetControllerJumpReleased();
+        
+        if (jumpPressed)
         {
             jumpBufferCounter = jumpBufferTime;
         }
@@ -103,7 +106,7 @@ public class PlayerJump : MonoBehaviour
         }
         
         // Variable jump height - cut jump short if button released
-        if (Input.GetButtonUp("Jump") && playerRigidbody.velocity.y > 0)
+        if (jumpReleased && playerRigidbody.velocity.y > 0)
         {
             playerRigidbody.velocity = new Vector2(playerRigidbody.velocity.x, 
                 playerRigidbody.velocity.y * 0.5f);
@@ -125,6 +128,24 @@ public class PlayerJump : MonoBehaviour
         }
         #endif
         return false;
+    }
+    
+    private bool GetControllerJumpInput()
+    {
+        // Check for controller jump input (button A, space, etc.)
+        return Input.GetButtonDown("Jump") || Input.GetKeyDown(KeyCode.JoystickButton0);
+    }
+    
+    private bool GetControllerJumpReleased()
+    {
+        // Check for controller jump button release
+        return Input.GetButtonUp("Jump") || Input.GetKeyUp(KeyCode.JoystickButton0);
+    }
+    
+    private bool GetControllerJumpHeld()
+    {
+        // Check if controller jump button is being held
+        return Input.GetButton("Jump") || Input.GetKey(KeyCode.JoystickButton0);
     }
     
     private void PerformJump()
@@ -165,7 +186,7 @@ public class PlayerJump : MonoBehaviour
             playerRigidbody.velocity += Vector2.up * Physics2D.gravity.y * 
                 (fallMultiplier - 1) * Time.deltaTime;
         }
-        else if (playerRigidbody.velocity.y > 0 && !Input.GetButton("Jump"))
+        else if (playerRigidbody.velocity.y > 0 && !Input.GetButton("Jump") && !GetControllerJumpHeld())
         {
             // Lower jump when button not held
             playerRigidbody.velocity += Vector2.up * Physics2D.gravity.y * 
@@ -555,6 +576,48 @@ public class JumpMechanics : MonoBehaviour
    }
    ```
 
+### Game Controller Tests
+1. **Controller Jump Input**
+   ```csharp
+   [Test]
+   public void When_ControllerJumpPressed_Should_RegisterJumpInput()
+   {
+       // Arrange
+       var player = CreatePlayerWithJump();
+       var jump = player.GetComponent<PlayerJump>();
+       SetPlayerGrounded(player, true);
+       
+       // Act
+       SimulateControllerJumpInput(true);
+       bool jumpInput = jump.GetControllerJumpInput();
+       
+       // Assert
+       Assert.IsTrue(jumpInput);
+   }
+   ```
+
+2. **Controller Variable Jump Height**
+   ```csharp
+   [Test]
+   public void When_ControllerJumpReleasedEarly_Should_ReduceJumpHeight()
+   {
+       // Arrange
+       var player = CreatePlayerWithJump();
+       var jump = player.GetComponent<PlayerJump>();
+       var rigidbody = player.GetComponent<Rigidbody2D>();
+       SetPlayerGrounded(player, true);
+       
+       // Act
+       jump.PerformJump();
+       float initialVelocity = rigidbody.velocity.y;
+       SimulateControllerJumpInput(false); // Release jump
+       jump.ApplyJumpPhysics();
+       
+       // Assert
+       Assert.Less(rigidbody.velocity.y, initialVelocity);
+   }
+   ```
+
 ### Audio Tests
 1. **Jump Sound Tests**
    ```csharp
@@ -580,6 +643,7 @@ public class JumpMechanics : MonoBehaviour
 - [ ] Coyote time and jump buffering implemented
 - [ ] Variable jump height based on input duration
 - [ ] Touch input works for iOS devices
+- [ ] Game controller input works with proper button mapping
 - [ ] Jump animations integrated and working
 - [ ] Audio feedback plays on jump
 - [ ] Physics feel responsive and appropriate for platformer
@@ -606,6 +670,7 @@ public class JumpMechanics : MonoBehaviour
 ## Notes
 - Jump mechanics are critical for core gameplay loop
 - Coyote time and jump buffering improve player experience significantly
+- Game controller support enhances accessibility and player preference
 - Consider adding particle effects for jump and landing
 - Variable jump height allows for more precise platforming
 - Audio feedback enhances game feel and player satisfaction
