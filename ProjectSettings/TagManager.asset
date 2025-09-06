@@ -3,15 +3,7 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags:
-  - Ground
-  - Player
-  - Enemy
-  - Collectible
-  - LiquorStore
-  - Obstacle
-  - PowerUp
-  - Boundary
+  tags: []
   layers:
   - Default
   - TransparentFX
@@ -21,12 +13,12 @@ TagManager:
   - UI
   - 
   - 
-  - Ground
-  - Player
-  - Enemy
-  - Collectible
-  - Background
-  - Foreground
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
   - 
   - 
   - 
@@ -49,21 +41,36 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
-  - name: Background
-    uniqueID: 1234567
-    locked: 0
-  - name: Ground
-    uniqueID: 2345678
-    locked: 0
-  - name: Player
-    uniqueID: 3456789
-    locked: 0
-  - name: Enemies
-    uniqueID: 4567890
-    locked: 0
-  - name: Collectibles
-    uniqueID: 5678901
-    locked: 0
-  - name: UI
-    uniqueID: 6789012
-    locked: 0
+  m_RenderingLayers:
+  - Default
+  - Light Layer 1
+  - Light Layer 2
+  - Light Layer 3
+  - Light Layer 4
+  - Light Layer 5
+  - Light Layer 6
+  - Light Layer 7
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
