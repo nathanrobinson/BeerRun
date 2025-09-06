@@ -193,8 +193,8 @@ namespace BeerRun
                 // Set physics properties suitable for platforming
                 playerRigidbody.mass = 1f;
                 playerRigidbody.gravityScale = 2.5f;
-                playerRigidbody.drag = 0f;
-                playerRigidbody.angularDrag = 0.05f;
+                playerRigidbody.linearDamping = 0f;
+                playerRigidbody.angularDamping = 0.05f;
                 playerRigidbody.freezeRotation = true;
             }
             
@@ -252,7 +252,7 @@ namespace BeerRun
             // Stop physics movement
             if (playerRigidbody != null)
             {
-                playerRigidbody.velocity = Vector2.zero;
+                playerRigidbody.linearVelocity = Vector2.zero;
                 playerRigidbody.isKinematic = true;
             }
             
