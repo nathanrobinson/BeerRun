@@ -66,5 +66,8 @@
     "explorer.fileNesting.patterns": {
         "*.sln": "*.csproj",
     },
-    "dotnet.defaultSolution": "BeerRun.sln"
+    "dotnet.defaultSolution": "BeerRun.sln",
+    "cSpell.words": [
+        "Rigidbody"
+    ]
 }

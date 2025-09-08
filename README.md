@@ -1,10 +1,10 @@
 # BeerRun
 
-An 8-bit side-scroller platform game built with Unity, targeting iOS platforms. The goal is to make it to the liquor store to buy beer while dodging obstacles, police, and church members.
+An 8-bit side-scroller platform game built with Swift and SpriteKit, targeting iOS platforms. The goal is to make it to the liquor store to buy beer while dodging obstacles, police, and church members.
 
 ## 🎮 Game Concept
 
-Beer Run is an 8-bit side-scroller platform game written in Unity. The goal is to make it to the liquor store to buy beer. Each level involves the player running towards a liquor store while dodging obstacles and avoiding the police and church members. 
+Beer Run is an 8-bit side-scroller platform game written in Swift using SpriteKit. The goal is to make it to the liquor store to buy beer. Each level involves the player running towards a liquor store while dodging obstacles and avoiding the police and church members. 
 
 ### Core Gameplay
 - **Objective**: Reach the liquor store at the end of each level
@@ -36,11 +36,11 @@ Beer Run is an 8-bit side-scroller platform game written in Unity. The goal is t
 
 ### Prerequisites
 
-#### Unity Installation
-1. **Download Unity Hub**: Visit [Unity Download](https://unity3d.com/get-unity/download)
-2. **Install Unity 2022.3.12f1 LTS** with the following modules:
-   - iOS Build Support (required for iOS builds)
-   - Visual Studio/Visual Studio Code Editor (recommended)
+#### Xcode Installation
+1. **Download Xcode**: Visit the [Mac App Store](https://apps.apple.com/us/app/xcode/id497799835?mt=12)
+2. **Install Xcode 13.0 or newer** with the following components:
+   - Command Line Tools (required for builds)
+   - iOS Simulator (for testing)
 
 #### Platform-Specific Requirements
 
@@ -51,7 +51,7 @@ Beer Run is an 8-bit side-scroller platform game written in Unity. The goal is t
 
 **For Development (Any Platform):**
 - Git (for version control)
-- Text editor or IDE (Visual Studio Code, Rider, Visual Studio)
+- Text editor or IDE (Xcode, Visual Studio Code, AppCode)
 
 ### Project Setup
 
@@ -61,25 +61,17 @@ Beer Run is an 8-bit side-scroller platform game written in Unity. The goal is t
    cd BeerRun
    ```
 
-2. **Verify Unity Version**
+2. **Open Project in Xcode**
    ```bash
-   cat ProjectSettings/ProjectVersion.txt
-   # Expected: m_EditorVersion: 2022.3.12f1
+   open BeerRun.xcodeproj
+   # or if using a workspace
+   open BeerRun.xcworkspace
    ```
 
-3. **Open Project in Unity**
-   ```bash
-   # Using Unity Hub (recommended)
-   unity-hub --projectPath .
-   
-   # Or using Unity Editor directly
-   unity-editor .
-   ```
-
-4. **Verify Project Structure**
+3. **Verify Project Structure**
    ```bash
    # Check that all required folders exist
-   ls -la Assets/Scripts/Gameplay Assets/Scripts/UI Assets/Scripts/Tests/
+   ls -la Sources/GameLogic Sources/UI Tests/
    ```
 
 ### Environment Validation
@@ -87,11 +79,8 @@ Beer Run is an 8-bit side-scroller platform game written in Unity. The goal is t
 Run these commands to validate your setup:
 
 ```bash
-# Check Unity version
-cat ProjectSettings/ProjectVersion.txt
-
 # Verify project structure
-find Assets -type d -name "Scripts" -o -name "Gameplay" -o -name "UI" -o -name "Tests"
+find Sources -type d -name "GameLogic" -o -name "UI" -o -name "Tests"
 
 # Check Git repository health
 git status
@@ -101,39 +90,32 @@ git log --oneline -5
 ## 📁 Project Structure
 
 ```
-Assets/
-├── Scripts/
-│   ├── Gameplay/          # Core game mechanics (player, enemies, obstacles)
-│   ├── UI/               # User interface components
-│   ├── Managers/         # System managers (GameManager, AudioManager, etc.)
-│   ├── Data/             # ScriptableObjects and data containers
-│   ├── Utilities/        # Helper classes and extensions
-│   └── Tests/            # All test files
-│       ├── EditMode/     # Edit-mode tests (no Unity runtime)
-│       └── PlayMode/     # Play-mode tests (full Unity runtime)
-├── Scenes/               # Unity scenes
-├── Prefabs/              # Reusable game objects
-├── Materials/            # Unity materials
-├── Textures/             # Sprite textures and images
-├── Audio/                # Sound effects and music
-└── StreamingAssets/      # Platform-specific assets
+Sources/
+├── GameLogic/          # Core game mechanics (player, enemies, obstacles)
+├── UI/                 # User interface components
+├── Managers/           # System managers (GameManager, AudioManager, etc.)
+├── Data/               # Data containers and models
+├── Utilities/          # Helper classes and extensions
+└── Tests/              # All test files
+    ├── Unit/           # Unit tests
+    └── Integration/    # Integration tests
+Resources/              # Sprite textures, images, audio, etc.
 ```
 
 ### Key Configuration Files
-- `ProjectSettings/ProjectSettings.asset` - Platform and build settings
-- `Packages/manifest.json` - Unity package dependencies
-- `UNITY_PROJECT_SETUP.md` - Detailed project configuration documentation
-- `.copilot-instructions.md` - Unity-specific development guidelines
+- `BeerRun.xcodeproj` or `BeerRun.xcworkspace` - Xcode project/workspace
+- `Package.swift` - Swift package dependencies (if using SwiftPM)
+- `README.md` - Project documentation
 
 ## 🏗️ Building
 
 ### Development Builds
 
-**Note**: All Unity commands require Unity to be installed and take significant time (15-60 minutes). Never cancel builds in progress.
+**Note**: All Xcode builds require Xcode to be installed and can take significant time (5-30 minutes). Never cancel builds in progress.
 
 ```bash
-# Development build for testing (Linux/Windows)
-unity-editor -batchmode -quit -projectPath . -buildTarget StandaloneLinux64 -buildPath ./Builds/Development -logFile dev-build.log
+# Build for development (Debug configuration)
+xcodebuild -scheme BeerRun -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 13' clean build
 ```
 
 ### iOS Builds (Production)
@@ -141,8 +123,8 @@ unity-editor -batchmode -quit -projectPath . -buildTarget StandaloneLinux64 -bui
 **Requirements**: macOS with Xcode installed
 
 ```bash
-# iOS build - takes 30-60 minutes. DO NOT CANCEL
-unity-editor -batchmode -quit -projectPath . -buildTarget iOS -buildPath ./Builds/iOS -logFile ios-build.log
+# Archive for iOS (Release configuration)
+xcodebuild -scheme BeerRun -configuration Release -sdk iphoneos -archivePath ./Builds/BeerRun.xcarchive archive
 ```
 
 **iOS Build Configuration:**
@@ -151,7 +133,6 @@ unity-editor -batchmode -quit -projectPath . -buildTarget iOS -buildPath ./Build
 - **Device Orientation**: Landscape Left/Right
 - **Target Resolution**: 1920x1080 (16:9 aspect ratio)
 - **Graphics API**: Metal (iOS optimized)
-- **Scripting Backend**: IL2CPP
 - **Architecture**: ARM64
 
 ### Build Validation
@@ -160,7 +141,7 @@ After building, verify your build:
 
 ```bash
 # Check build logs for errors
-tail -f build.log  # or ios-build.log
+tail -f build.log  # or xcodebuild.log
 
 # Verify build output
 ls -la ./Builds/
@@ -168,51 +149,36 @@ ls -la ./Builds/
 
 ## 🚀 Running
 
-### In Unity Editor
+### In Xcode Simulator
 
-1. Open the project in Unity Editor
-2. Navigate to `Assets/Scenes/`
-3. Open the main scene (e.g., `SampleScene.unity`)
-4. Click the Play button in the Unity Editor
+1. Open the project in Xcode
+2. Select the target device (e.g., iPhone 13 Simulator)
+3. Click the Run button in Xcode
 
-### Development Builds
+### On iOS Device
 
-```bash
-# Run the development build (Linux example)
-./Builds/Development/BeerRun.x86_64
-```
-
-### iOS Device Testing
-
-1. Open the generated Xcode project in `./Builds/iOS/`
-2. Connect your iOS device
-3. Configure code signing and provisioning profiles
-4. Build and run from Xcode
+1. Connect your iOS device
+2. Configure code signing and provisioning profiles in Xcode
+3. Build and run from Xcode
 
 ## 🧪 Testing
 
 ### Running Tests
 
-**Note**: Test execution can take 10-30 minutes. DO NOT CANCEL test runs.
+**Note**: Test execution can take several minutes. DO NOT CANCEL test runs.
 
 ```bash
-# Run all tests (EditMode and PlayMode)
-unity-editor -batchmode -quit -projectPath . -runTests -testResults ./test-results.xml -logFile test.log
-
-# Run EditMode tests only
-unity-editor -batchmode -quit -projectPath . -runTests -testPlatform EditMode -testResults ./editmode-results.xml -logFile editmode.log
-
-# Run PlayMode tests only
-unity-editor -batchmode -quit -projectPath . -runTests -testPlatform PlayMode -testResults ./playmode-results.xml -logFile playmode.log
+# Run all tests (Unit and Integration)
+xcodebuild test -scheme BeerRun -destination 'platform=iOS Simulator,name=iPhone 13'
 ```
 
 ### Test Categories
 
 The project uses different test categories:
 
-- **Unit Tests**: `[Category("Unit")]` - Fast, isolated tests
-- **Integration Tests**: `[Category("Integration")]` - System interaction tests
-- **Performance Tests**: `[Category("Performance")]` - Performance benchmarks
+- **Unit Tests**: Fast, isolated tests
+- **Integration Tests**: System interaction tests
+- **Performance Tests**: Performance benchmarks
 
 ### Test-Driven Development (TDD)
 
@@ -223,22 +189,20 @@ This project follows TDD principles:
 3. **Refactor**: Improve code while keeping tests green
 
 Example test structure:
-```csharp
-[TestFixture]
-[Category("Unit")]
-public class PlayerMovementTests
-{
-    [Test]
-    public void When_PlayerJumps_Should_IncreaseVerticalVelocity()
-    {
+```swift
+import XCTest
+@testable import BeerRun
+
+class PlayerMovementTests: XCTestCase {
+    func test_When_PlayerJumps_Should_IncreaseVerticalVelocity() {
         // Arrange
-        var player = CreateTestPlayer();
+        let player = TestPlayer()
         
         // Act
-        player.Jump();
+        player.jump()
         
         // Assert
-        Assert.Greater(player.Velocity.y, 0);
+        XCTAssertGreaterThan(player.velocity.dy, 0)
     }
 }
 ```
@@ -246,11 +210,8 @@ public class PlayerMovementTests
 ### Viewing Test Results
 
 ```bash
-# View test results
-cat test-results.xml
-
-# Check test logs
-tail -f test.log
+# View test results in Xcode's Test navigator
+# Or check the command line output for test summaries
 ```
 
 ## 💻 Development Workflow
@@ -264,11 +225,8 @@ tail -f test.log
 
 2. **Verify Project State**
    ```bash
-   # Check Unity version
-   cat ProjectSettings/ProjectVersion.txt
-   
    # Validate project structure
-   find Assets -type d -name "Scripts" -o -name "Tests"
+   find Sources -type d -name "GameLogic" -o -name "Tests"
    ```
 
 3. **Write Tests First (TDD)**
@@ -278,22 +236,22 @@ tail -f test.log
 
 4. **Run Tests Frequently**
    ```bash
-   # Quick EditMode tests during development
-   unity-editor -batchmode -quit -projectPath . -runTests -testPlatform EditMode -testResults ./quick-test.xml -logFile quick-test.log
+   # Quick unit tests during development
+   xcodebuild test -scheme BeerRun -destination 'platform=iOS Simulator,name=iPhone 13'
    ```
 
 5. **Build and Validate**
    ```bash
    # Development build to verify everything works
-   unity-editor -batchmode -quit -projectPath . -buildTarget StandaloneLinux64 -buildPath ./Builds/Test -logFile test-build.log
+   xcodebuild -scheme BeerRun -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 13' build
    ```
 
 ### Code Quality Standards
 
-- Follow C# coding conventions
+- Follow Swift coding conventions
 - Use SOLID principles
 - Maintain 80%+ test coverage on critical systems
-- Add XML documentation for public APIs
+- Add documentation for public APIs
 - Use meaningful names and avoid abbreviations
 
 ### Performance Targets
@@ -307,42 +265,39 @@ tail -f test.log
 
 ### Common Issues
 
-#### Unity Not Found
+#### Xcode Not Found
 ```bash
-# Check if Unity is in PATH
-which unity-editor || echo "Unity not found"
+# Check if Xcode is in PATH
+xcode-select -p || echo "Xcode not found"
 
-# Verify Unity installation
-ls -la /Applications/Unity/Hub/Editor/2022.3.12f1/
+# Verify Xcode installation
+ls -la /Applications/Xcode.app/
 ```
 
-**Solution**: Install Unity 2022.3.12f1 LTS with iOS Build Support from Unity Hub.
+**Solution**: Install Xcode 13.0+ from the Mac App Store.
 
 #### Build Failures
 ```bash
 # Check build logs
-tail -100 build.log
+tail -100 xcodebuild.log
 
 # Verify platform settings
-grep -A 5 "selectedBuildTarget" ProjectSettings/EditorBuildSettings.asset
+cat BeerRun.xcodeproj/project.pbxproj | grep -A 5 "IPHONEOS_DEPLOYMENT_TARGET"
 ```
 
 **Common Solutions**:
-- Verify Unity version matches project requirements
-- Ensure iOS Build Support module is installed
-- Check Xcode version compatibility (13.0+) for iOS builds
+- Verify Xcode version matches project requirements
+- Ensure iOS deployment target is set correctly
+- Check code signing and provisioning profiles
 
 #### Test Failures
 ```bash
 # Check test logs for detailed error information
-tail -100 test.log
-
-# Verify test framework is installed
-grep "com.unity.test-framework" Packages/manifest.json
+tail -100 xcodebuild.log
 ```
 
 #### iOS-Specific Issues
-- **Touch input not working**: Check Input System configuration
+- **Touch input not working**: Check input handling code
 - **Performance drops**: Profile and optimize heavy operations
 - **Build errors**: Verify Xcode and iOS SDK versions
 - **Device crashes**: Check device logs and error reports
@@ -351,17 +306,17 @@ grep "com.unity.test-framework" Packages/manifest.json
 
 ```bash
 # Monitor build performance
-time unity-editor -batchmode -quit -projectPath . -buildTarget StandaloneLinux64 -buildPath ./Builds/Performance -logFile perf-build.log
+time xcodebuild -scheme BeerRun -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 13' build
 
 # Check project size
-du -sh Assets/ Packages/
+du -sh Sources/ Resources/
 ```
 
 ### Getting Help
 
-1. **Check Documentation**: Review `UNITY_PROJECT_SETUP.md` and `.copilot-instructions.md`
+1. **Check Documentation**: Review `README.md` and project docs
 2. **Check Logs**: Always examine build and test logs for detailed error information
-3. **Verify Environment**: Ensure Unity version and required modules are correctly installed
+3. **Verify Environment**: Ensure Xcode version and required modules are correctly installed
 4. **Test Incrementally**: Make small changes and test frequently
 
 ## 🤝 Contributing
@@ -385,23 +340,22 @@ du -sh Assets/ Packages/
 
 ### Build Time Expectations
 
-- **Project opening**: 2-5 minutes
-- **Script compilation**: 1-3 minutes
-- **EditMode tests**: 5-15 minutes
-- **PlayMode tests**: 10-25 minutes
-- **Development build**: 15-30 minutes
-- **iOS build**: 30-60 minutes
+- **Project opening**: 1-2 minutes
+- **Code compilation**: 1-3 minutes
+- **Unit tests**: 1-5 minutes
+- **Integration tests**: 2-10 minutes
+- **Development build**: 5-15 minutes
+- **iOS archive**: 10-30 minutes
 
-**Important**: Never cancel Unity operations. They require significant time to complete properly.
+**Important**: Never cancel Xcode operations. They require significant time to complete properly.
 
 ---
 
 ## 📚 Additional Resources
 
-- [Unity Project Setup Documentation](UNITY_PROJECT_SETUP.md)
-- [Development Guidelines](.github/copilot-instructions.md)
+- [SpriteKit Documentation](https://developer.apple.com/documentation/spritekit)
+- [iOS Development with Xcode](https://developer.apple.com/xcode/)
+- [Swift Language Guide](https://docs.swift.org/swift-book/)
 - [User Stories](UserStories/)
-- [Unity 2022.3 LTS Documentation](https://docs.unity3d.com/2022.3/Documentation/Manual/)
-- [iOS Development with Unity](https://docs.unity3d.com/Manual/iphone.html)
 
-**Note**: This is a Unity iOS game project. All Unity commands require Unity 2022.3.12f1 LTS installation and can take significant time to complete. Development builds and testing should be performed regularly but with patience for the required processing time. 
+**Note**: This is an iOS SpriteKit game project. All Xcode commands require Xcode 13.0+ installation and can take significant time to complete. Development builds and testing should be performed regularly but with patience for the required processing time.
