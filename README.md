@@ -71,7 +71,7 @@ Beer Run is an 8-bit side-scroller platform game written in Swift using SpriteKi
 3. **Verify Project Structure**
    ```bash
    # Check that all required folders exist
-   ls -la Sources/GameLogic Sources/UI Tests/
+   ls -la BeerRun BeerRunTests BeerRunUITests Resources UserStories
    ```
 
 ### Environment Validation
@@ -80,7 +80,7 @@ Run these commands to validate your setup:
 
 ```bash
 # Verify project structure
-find Sources -type d -name "GameLogic" -o -name "UI" -o -name "Tests"
+ls -la BeerRun BeerRunTests BeerRunUITests Resources UserStories
 
 # Check Git repository health
 git status
@@ -90,16 +90,11 @@ git log --oneline -5
 ## 📁 Project Structure
 
 ```
-Sources/
-├── GameLogic/          # Core game mechanics (player, enemies, obstacles)
-├── UI/                 # User interface components
-├── Managers/           # System managers (GameManager, AudioManager, etc.)
-├── Data/               # Data containers and models
-├── Utilities/          # Helper classes and extensions
-└── Tests/              # All test files
-    ├── Unit/           # Unit tests
-    └── Integration/    # Integration tests
-Resources/              # Sprite textures, images, audio, etc.
+BeerRun/              # Core game code (scenes, controllers, app delegate, etc.)
+BeerRunTests/         # All unit and integration test files
+BeerRunUITests/       # UI test files
+Resources/            # Sprite textures, images, audio, etc.
+UserStories/          # User story markdown files
 ```
 
 ### Key Configuration Files
@@ -226,7 +221,7 @@ class PlayerMovementTests: XCTestCase {
 2. **Verify Project State**
    ```bash
    # Validate project structure
-   find Sources -type d -name "GameLogic" -o -name "Tests"
+   ls -la BeerRun BeerRunTests BeerRunUITests Resources UserStories
    ```
 
 3. **Write Tests First (TDD)**
@@ -309,7 +304,7 @@ tail -100 xcodebuild.log
 time xcodebuild -scheme BeerRun -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 13' build
 
 # Check project size
-du -sh Sources/ Resources/
+du -sh BeerRun/ Resources/
 ```
 
 ### Getting Help

@@ -99,4 +99,19 @@ class GameScene: SKScene {
         
         self.lastUpdateTime = currentTime
     }
+
+    override func didMove(to view: SKView) {
+        super.didMove(to: view)
+        addPlayerNode()
+    }
+    
+    private func addPlayerNode() {
+        // Use a placeholder 8-bit style color if no texture is available
+        let playerTexture = SKTexture(imageNamed: "player_8bit")
+        let playerNode = SKSpriteNode(texture: playerTexture)
+        playerNode.name = "player"
+        playerNode.size = CGSize(width: 64, height: 64)
+        playerNode.position = CGPoint(x: size.width * 0.1, y: size.height * 0.5)
+        addChild(playerNode)
+    }
 }

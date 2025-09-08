@@ -62,3 +62,17 @@ Pods/
 # Ignore by convention
 .idea/
 .vscode/
+
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*.pid
+*.seed
+*.pid.lock
+*.orig
+*.rej

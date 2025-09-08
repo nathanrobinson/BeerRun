@@ -27,7 +27,7 @@ When Xcode is not available, use these validated approaches:
 1. **Project Structure Validation** (VALIDATED):
    ```bash
    # Verify folder structure matches requirements
-   find Sources -type d -name "GameLogic" -o -name "UI" -o -name "Tests"
+   ls -la BeerRun BeerRunTests BeerRunUITests Resources UserStories
    ```
 
 2. **Documentation Verification** (VALIDATED):
@@ -381,7 +381,7 @@ Remember: **Red-Green-Refactor** is not just a methodology, it's a mindset that 
 cd /path/to/BeerRun
 
 # Verify project structure (VALIDATED)
-ls -la Sources/GameLogic Sources/UI Sources/Managers Sources/Data Sources/Utilities Sources/Tests
+ls -la BeerRun BeerRunTests BeerRunUITests Resources UserStories
 ```
 
 **Xcode commands** (REQUIRES XCODE INSTALLATION - NOT VALIDATED):
@@ -427,7 +427,7 @@ xcodebuild test -scheme BeerRun -destination 'platform=iOS Simulator,name=iPhone
 1. **Project Structure Validation** (VALIDATED):
    ```bash
    # Verify all required folders exist
-   ls -la Sources/GameLogic Sources/UI Sources/Managers Sources/Data Sources/Utilities Sources/Tests
+   ls -la BeerRun BeerRunTests BeerRunUITests Resources UserStories
    ```
 
 2. **Test Validation** (REQUIRES XCODE - NOT VALIDATED):
@@ -454,16 +454,11 @@ xcodebuild test -scheme BeerRun -destination 'platform=iOS Simulator,name=iPhone
 
 ### Key Directories
 ```
-Sources/
-├── GameLogic/          # Core game mechanics (player, enemies, obstacles)
-├── UI/                 # User interface components
-├── Managers/           # System managers (GameManager, AudioManager, etc.)
-├── Data/               # Data containers and models
-├── Utilities/          # Helper classes and extensions
-└── Tests/              # All test files
-    ├── Unit/           # Unit tests
-    └── Integration/    # Integration tests
-Resources/              # Sprite textures, images, audio, etc.
+BeerRun/              # Core game code (scenes, controllers, app delegate, etc.)
+BeerRunTests/         # All unit and integration test files
+BeerRunUITests/       # UI test files
+Resources/            # Sprite textures, images, audio, etc.
+UserStories/          # User story markdown files
 ```
 
 ### Important Files to Monitor
@@ -494,12 +489,6 @@ Resources/              # Sprite textures, images, audio, etc.
 
 ### Frequently Run Commands Reference
 
-#### Project Status Check (VALIDATED)
-```bash
-# Verify project structure
-find Sources -type d -name "GameLogic" -o -name "UI" -o -name "Tests"
-```
-
 #### File System Layout (VALIDATED)
 ```bash
 ls -la
@@ -508,10 +497,23 @@ ls -la
 .git/
 .github/
 .gitignore
-Sources/
-Resources/
+BeerRun/
+BeerRunTests/
+BeerRunUITests/
 README.md
 UserStories/
+```
+
+#### Project Folder Structure (VALIDATED)
+```bash
+ls -la BeerRun/
+# Expected output:
+Assets.xcassets/
+Base.lproj/
+Actions.sks
+AppDelegate.swift
+GameScene.swift
+GameViewController.swift
 ```
 
 #### Asset Folder Structure (VALIDATED)
@@ -540,14 +542,14 @@ Levels/
    - Ensure iOS deployment target is set correctly
 
 4. **Test failures**:
-   - **Verified**: Check that all required folders exist: `find Sources -type d -name "GameLogic" -o -name "Tests"`
+   - **Verified**: Check that all required folders exist: `ls -la BeerRun BeerRunTests BeerRunUITests Resources UserStories`
    - Verify test target references are correct
    - Ensure XCTest is enabled in the project
 
 5. **Project structure issues** (VALIDATED):
    ```bash
    # Check if required directories exist
-   for dir in "Sources/GameLogic" "Sources/UI" "Sources/Tests/Unit" "Sources/Tests/Integration"; do
+   for dir in "BeerRun" "BeerRunTests" "BeerRunUITests" "Resources" "UserStories"; do
      if [ -d "$dir" ]; then
        echo "✓ $dir exists"
      else
@@ -607,9 +609,7 @@ jobs:
 2. Verify project structure:
    ```bash
    # Verify folder structure
-   for dir in "Sources/GameLogic" "Sources/UI" "Sources/Tests/Unit" "Sources/Tests/Integration"; do
-     if [ -d "$dir" ]; then echo "✓ $dir exists"; else echo "✗ $dir missing"; fi
-   done
+   ls -la BeerRun BeerRunTests BeerRunUITests Resources UserStories
    ```
 
 3. Check documentation:
