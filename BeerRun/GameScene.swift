@@ -17,6 +17,10 @@ class GameScene: SKScene {
     private var label : SKLabelNode?
     private var spinnyNode : SKShapeNode?
     
+    private var joystick: JoystickNode!
+    private var jumpButton: JumpButtonNode!
+    private var playerController: PlayerController?
+    
     override func sceneDidLoad() {
 
         self.lastUpdateTime = 0
@@ -97,21 +101,47 @@ class GameScene: SKScene {
             entity.update(deltaTime: dt)
         }
         
+        playerController?.clampPositionToSceneBounds(sceneSize: size)
+
         self.lastUpdateTime = currentTime
     }
 
     override func didMove(to view: SKView) {
         super.didMove(to: view)
         addPlayerNode()
+        addJoystickAndJumpButton()
     }
     
     private func addPlayerNode() {
-        // Use a placeholder 8-bit style color if no texture is available
         let playerTexture = SKTexture(imageNamed: "player_8bit")
-        let playerNode = SKSpriteNode(texture: playerTexture)
+        let playerNode = PlayerController(texture: playerTexture)
         playerNode.name = "player"
         playerNode.size = CGSize(width: 64, height: 64)
         playerNode.position = CGPoint(x: size.width * 0.1, y: size.height * 0.5)
+        playerNode.physicsBody = SKPhysicsBody(rectangleOf: playerNode.size)
+        playerNode.physicsBody?.allowsRotation = false
         addChild(playerNode)
+
+        self.playerController = playerNode
+    }
+
+    private func addJoystickAndJumpButton() {
+        joystick = JoystickNode()
+        joystick.position = CGPoint(x: 80, y: 80)
+        joystick.zPosition = 100
+        addChild(joystick)
+
+        joystick.onValueChanged = { [weak self] value in
+            self?.playerController?.handleMove(value)
+        }
+        
+        jumpButton = JumpButtonNode()
+        jumpButton.position = CGPoint(x: size.width - 80, y: 80)
+        jumpButton.zPosition = 100
+        addChild(jumpButton)
+        
+        jumpButton.onJumpPressed = { [weak self] in
+            self?.playerController?.handleJumpInput()
+        }
     }
 }
