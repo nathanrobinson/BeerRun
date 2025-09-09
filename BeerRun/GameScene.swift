@@ -209,7 +209,7 @@ class GameScene: SKScene {
         addChild(jumpButton)
         
         jumpButton.onJumpPressed = { [weak self] in
-            self?.playerController?.handleJumpInput()
+            let _ = self?.playerController?.handleJumpInput()
         }
     }
 }
