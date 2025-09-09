@@ -33,7 +33,7 @@ class PlayerMovementTests: XCTestCase {
         // Act
         // Simulate jump (assume handleJumpInput() method or similar exists)
         if let playerController = player as? PlayerController {
-            playerController.handleJumpInput()
+            let _ = playerController.handleJumpInput()
         }
         // Assert
         let newVelocity = player.physicsBody?.velocity.dy ?? 0
