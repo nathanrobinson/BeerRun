@@ -101,8 +101,10 @@ class GameScene: SKScene {
             entity.update(deltaTime: dt)
         }
         
-        playerController?.clampPositionToSceneBounds(sceneSize: size)
-
+        if let player = playerController {
+            player.updateMovement()
+            player.clampPositionToSceneBounds(sceneSize: size)
+        }
         self.lastUpdateTime = currentTime
     }
 
@@ -195,21 +197,25 @@ class GameScene: SKScene {
 
     private func addJoystickAndJumpButton() {
         joystick = JoystickNode()
-        joystick.position = CGPoint(x: 80, y: 80)
+        joystick.position = CGPoint(x: 100, y: 80)
         joystick.zPosition = 100
         addChild(joystick)
 
         joystick.onValueChanged = { [weak self] value in
-            self?.playerController?.handleMove(value)
+            self?.playerController?.setHorizontalInput(value)
         }
         
         jumpButton = JumpButtonNode()
-        jumpButton.position = CGPoint(x: size.width - 80, y: 80)
+        jumpButton.position = CGPoint(x: size.width - 100, y: 80)
         jumpButton.zPosition = 100
         addChild(jumpButton)
         
         jumpButton.onJumpPressed = { [weak self] in
-            let _ = self?.playerController?.handleJumpInput()
+            let _ = self?.playerController?.startJump()
+        }
+
+        jumpButton.onJumpReleased = { [weak self] in
+            let _ = self?.playerController?.endJump()
         }
     }
 }

@@ -3,6 +3,7 @@ import SpriteKit
 class JumpButtonNode: SKNode {
     private let button: SKShapeNode
     var onJumpPressed: (() -> Void)?
+    var onJumpReleased: (() -> Void)?
     private var isPressed = false
     
     override init() {
@@ -26,10 +27,12 @@ class JumpButtonNode: SKNode {
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         isPressed = false
         button.alpha = 0.7
+        onJumpReleased?()
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         isPressed = false
         button.alpha = 0.7
+        onJumpReleased?()
     }
 }

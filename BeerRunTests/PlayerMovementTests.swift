@@ -11,14 +11,15 @@ class PlayerMovementTests: XCTestCase {
             XCTFail("Player node not found")
             return
         }
-        let initialX = player.physicsBody?.velocity.dx ?? 0
+        let initialX = player.position.x
         // Act
         // Simulate right movement (assume moveRight() method or similar exists)
         if let playerController = player as? PlayerController {
-            playerController.handleMove(1.0)
+            playerController.setHorizontalInput(1.0)
+            playerController.updateMovement()
         }
         // Assert
-        XCTAssertGreaterThan(player.physicsBody?.velocity.dx ?? 0, initialX, "Player X position should increase when moving right")
+        XCTAssertGreaterThan(player.position.x, initialX, "Player X position should increase when moving right")
     }
 
     func test_When_PlayerJumps_Should_IncreaseVerticalVelocity() {
@@ -33,7 +34,7 @@ class PlayerMovementTests: XCTestCase {
         // Act
         // Simulate jump (assume handleJumpInput() method or similar exists)
         if let playerController = player as? PlayerController {
-            let _ = playerController.handleJumpInput()
+            let _ = playerController.startJump()
         }
         // Assert
         let newVelocity = player.physicsBody?.velocity.dy ?? 0
