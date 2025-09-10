@@ -14,6 +14,7 @@ struct PhysicsCategory {
     static let player: UInt32 = 0b1        // 1
     static let ground: UInt32 = 0b10       // 2
     static let obstacle: UInt32 = 0b100    // 4
+    static let enemy: UInt32 = 0b1000      // 8
 }
 
 class GameScene: SKScene {
@@ -112,6 +113,12 @@ class GameScene: SKScene {
         if let player = playerController {
             player.updateMovement()
             player.clampPositionToSceneBounds(sceneSize: size)
+            
+            // Update all enemies
+            let enemies = children.compactMap { $0 as? Enemy }
+            for enemy in enemies {
+                enemy.updateMovement(playerPosition: player.position)
+            }
         }
         self.lastUpdateTime = currentTime
     }
@@ -128,6 +135,7 @@ class GameScene: SKScene {
         addGroundNode()
         addPlayerNode()
         addObstacles()
+        addEnemies()
         addJoystickAndJumpButton()
     }
     
@@ -186,6 +194,42 @@ class GameScene: SKScene {
             texture.filteringMode = .nearest
             SKTextureAtlas.preloadTextureAtlases([SKTextureAtlas(dictionary: ["obstacle_8bit": texture])], withCompletionHandler: {})
         }
+        
+        // Police enemy placeholder
+        if SKTexture(imageNamed: "police_enemy_8bit").size() == .zero {
+            let size = CGSize(width: 48, height: 48)
+            UIGraphicsBeginImageContextWithOptions(size, false, 0)
+            UIColor.systemBlue.setFill()
+            UIBezierPath(rect: CGRect(origin: .zero, size: size)).fill()
+            // Add police hat detail
+            UIColor.darkBlue.setFill()
+            UIBezierPath(rect: CGRect(x: 8, y: 32, width: 32, height: 8)).fill()
+            // Add badge
+            UIColor.yellow.setFill()
+            UIBezierPath(ovalIn: CGRect(x: 20, y: 16, width: 8, height: 8)).fill()
+            let image = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+            let texture = SKTexture(image: image!)
+            texture.filteringMode = .nearest
+            SKTextureAtlas.preloadTextureAtlases([SKTextureAtlas(dictionary: ["police_enemy_8bit": texture])], withCompletionHandler: {})
+        }
+        
+        // Church member enemy placeholder
+        if SKTexture(imageNamed: "church_enemy_8bit").size() == .zero {
+            let size = CGSize(width: 48, height: 48)
+            UIGraphicsBeginImageContextWithOptions(size, false, 0)
+            UIColor.systemPurple.setFill()
+            UIBezierPath(rect: CGRect(origin: .zero, size: size)).fill()
+            // Add cross detail
+            UIColor.white.setFill()
+            UIBezierPath(rect: CGRect(x: 22, y: 8, width: 4, height: 16)).fill()
+            UIBezierPath(rect: CGRect(x: 16, y: 12, width: 16, height: 4)).fill()
+            let image = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+            let texture = SKTexture(image: image!)
+            texture.filteringMode = .nearest
+            SKTextureAtlas.preloadTextureAtlases([SKTextureAtlas(dictionary: ["church_enemy_8bit": texture])], withCompletionHandler: {})
+        }
     }
 
     private func addSkyNode() {
@@ -226,7 +270,7 @@ class GameScene: SKScene {
         playerNode.physicsBody = SKPhysicsBody(rectangleOf: playerNode.size)
         playerNode.physicsBody?.allowsRotation = false
         playerNode.physicsBody?.categoryBitMask = PhysicsCategory.player
-        playerNode.physicsBody?.contactTestBitMask = PhysicsCategory.obstacle | PhysicsCategory.ground
+        playerNode.physicsBody?.contactTestBitMask = PhysicsCategory.obstacle | PhysicsCategory.ground | PhysicsCategory.enemy
         playerNode.physicsBody?.collisionBitMask = PhysicsCategory.ground
         playerNode.zPosition = 10
         addChild(playerNode)
@@ -272,6 +316,40 @@ class GameScene: SKScene {
             obstacleIndex += 1
         }
     }
+    
+    private func addEnemies() {
+        guard let ground = childNode(withName: "ground") as? SKSpriteNode else { return }
+        
+        let groundTop = ground.position.y + ground.size.height / 2
+        
+        // Create enemies at various positions across the scene
+        let minSpacing: CGFloat = 200
+        let maxSpacing: CGFloat = 500
+        let startX: CGFloat = size.width * 0.4 // Start after player and some obstacles
+        let endX: CGFloat = size.width * 0.85
+        
+        var currentX = startX
+        var enemyIndex = 0
+        
+        while currentX < endX && enemyIndex < 5 { // Limit to reasonable number
+            let enemyPosition = CGPoint(x: currentX, y: groundTop + 24) // Half enemy height above ground
+            
+            // Alternate between enemy types
+            let enemy: Enemy
+            if enemyIndex % 2 == 0 {
+                enemy = Enemy.createPoliceEnemy(at: enemyPosition, sceneBounds: size)
+            } else {
+                enemy = Enemy.createChurchMemberEnemy(at: enemyPosition, sceneBounds: size)
+            }
+            
+            addChild(enemy)
+            
+            // Calculate next enemy position with some randomness
+            let spacing = CGFloat.random(in: minSpacing...maxSpacing)
+            currentX += spacing
+            enemyIndex += 1
+        }
+    }
 
     private func addJoystickAndJumpButton() {
         joystick = JoystickNode()
@@ -307,6 +385,26 @@ extension GameScene: SKPhysicsContactDelegate {
             // Player collided with obstacle
             if let player = (contact.bodyA.categoryBitMask == PhysicsCategory.player ? contact.bodyA.node : contact.bodyB.node) as? PlayerController {
                 player.handleObstacleCollision()
+            }
+        }
+        else if contactMask == PhysicsCategory.player | PhysicsCategory.enemy {
+            // Player collided with enemy
+            guard let player = (contact.bodyA.categoryBitMask == PhysicsCategory.player ? contact.bodyA.node : contact.bodyB.node) as? PlayerController,
+                  let enemy = (contact.bodyA.categoryBitMask == PhysicsCategory.enemy ? contact.bodyA.node : contact.bodyB.node) as? Enemy else {
+                return
+            }
+            
+            // Determine if this is a jump-on-enemy collision or side collision
+            let playerIsAboveEnemy = player.position.y > enemy.position.y + enemy.size.height / 4
+            let playerIsFalling = (player.physicsBody?.velocity.dy ?? 0) < 0
+            
+            if playerIsAboveEnemy && playerIsFalling {
+                // Player jumped on enemy - defeat the enemy
+                enemy.handleJumpDefeat()
+                player.handleEnemyJumpDefeat(bounceVelocity: enemy.getBounceVelocity())
+            } else {
+                // Side collision - apply penalty
+                player.handleEnemyCollision(penaltyMultiplier: enemy.getPenaltyMultiplier())
             }
         }
     }

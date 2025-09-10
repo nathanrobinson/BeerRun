@@ -144,6 +144,34 @@ class PlayerController: SKSpriteNode {
         }
     }
     
+    // MARK: - Enemy Collision System
+    
+    /// Handles collision with an enemy when not jumping on them, applying penalty effects
+    /// - Parameter penaltyMultiplier: Severity of the penalty (0.0-1.0, lower values = more severe)
+    func handleEnemyCollision(penaltyMultiplier: CGFloat = 0.4) {
+        // Apply penalty if not already penalized
+        if !isPenalized {
+            isPenalized = true
+            penaltyTimeLeft = penaltyDuration
+            currentMoveSpeed = moveSpeed * penaltyMultiplier
+            currentJumpPenalty = 0.2 // Slightly more severe than obstacle penalty
+        }
+    }
+    
+    /// Handles successful jump defeat of an enemy, providing bounce and positive feedback
+    /// - Parameter bounceVelocity: Upward velocity to apply after defeating enemy
+    func handleEnemyJumpDefeat(bounceVelocity: CGFloat = 300) {
+        // Apply upward bounce
+        physicsBody?.velocity.dy = bounceVelocity
+        
+        // Optional: Reset any existing penalties as reward for skillful play
+        if isPenalized {
+            isPenalized = false
+            currentMoveSpeed = moveSpeed
+            currentJumpPenalty = 0.0
+        }
+    }
+    
     /// Returns whether the player is currently penalized from obstacle collision
     var isCurrentlyPenalized: Bool {
         return isPenalized
