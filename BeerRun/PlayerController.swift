@@ -8,6 +8,14 @@ class PlayerController: SKSpriteNode {
     private let deceleration: CGFloat = 1.5
     private let skidThreshold: CGFloat = 10.0
     private let skidDuration: CGFloat = 0.15 // seconds
+    
+    // Obstacle collision penalty system
+    private let penaltySlowdownFactor: CGFloat = 0.3 // 30% of normal speed
+    private let penaltyDuration: CGFloat = 3.0 // 3 seconds
+    private var isPenalized: Bool = false
+    private var penaltyTimeLeft: CGFloat = 0.0
+    private var currentMoveSpeed: CGFloat = 20.0
+    
     private var isGrounded: Bool {
         // Consider grounded if vertical velocity is near zero and
         // node is on a node with a "ground" or "platform" category
@@ -33,6 +41,19 @@ class PlayerController: SKSpriteNode {
     }
     
     func updateMovement() {
+        // Update penalty system
+        if isPenalized {
+            penaltyTimeLeft -= 1.0 / 60.0 // Assume 60 FPS for simplicity
+            currentMoveSpeed = moveSpeed * penaltySlowdownFactor
+            
+            if penaltyTimeLeft <= 0 {
+                isPenalized = false
+                currentMoveSpeed = moveSpeed
+            }
+        } else {
+            currentMoveSpeed = moveSpeed
+        }
+        
         // Skid logic
         if isSkidding {
             skidTimeLeft -= 1.0 / 60.0 // Assume 60 FPS for simplicity
@@ -50,8 +71,8 @@ class PlayerController: SKSpriteNode {
                 isSkidding = false
             }
         } else {
-            // Normal movement
-            let targetSpeed = horizontalInput * moveSpeed
+            // Normal movement (affected by penalty)
+            let targetSpeed = horizontalInput * currentMoveSpeed
             if abs(horizontalInput) > 0.01 {
                 // Accelerate toward target speed
                 let delta = targetSpeed - velocityX
@@ -105,5 +126,27 @@ class PlayerController: SKSpriteNode {
         pos.x = max(minX, min(maxX, pos.x))
         pos.y = max(minY, min(maxY, pos.y))
         position = pos
+    }
+    
+    // MARK: - Obstacle Collision System
+    
+    /// Handles collision with an obstacle, applying penalty effects
+    func handleObstacleCollision() {
+        // Apply penalty if not already penalized
+        if !isPenalized {
+            isPenalized = true
+            penaltyTimeLeft = penaltyDuration
+            currentMoveSpeed = moveSpeed * penaltySlowdownFactor
+        }
+    }
+    
+    /// Returns whether the player is currently penalized from obstacle collision
+    var isCurrentlyPenalized: Bool {
+        return isPenalized
+    }
+    
+    /// Returns the current movement speed (may be reduced due to penalty)
+    var currentMovementSpeed: CGFloat {
+        return currentMoveSpeed
     }
 }

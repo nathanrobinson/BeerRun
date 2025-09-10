@@ -8,6 +8,14 @@
 import SpriteKit
 import GameplayKit
 
+// Physics categories for collision detection
+struct PhysicsCategory {
+    static let none: UInt32 = 0
+    static let player: UInt32 = 0b1        // 1
+    static let ground: UInt32 = 0b10       // 2
+    static let obstacle: UInt32 = 0b100    // 4
+}
+
 class GameScene: SKScene {
     
     var entities = [GKEntity]()
@@ -110,10 +118,16 @@ class GameScene: SKScene {
 
     override func didMove(to view: SKView) {
         super.didMove(to: view)
+        
+        // Set up physics world
+        physicsWorld.contactDelegate = self
+        physicsWorld.gravity = CGVector(dx: 0, dy: -980) // Realistic gravity
+        
         generatePlaceholderImagesIfNeeded()
         addSkyNode()
         addGroundNode()
         addPlayerNode()
+        addObstacles()
         addJoystickAndJumpButton()
     }
     
@@ -130,6 +144,7 @@ class GameScene: SKScene {
             texture.filteringMode = .nearest
             SKTextureAtlas.preloadTextureAtlases([SKTextureAtlas(dictionary: ["player_8bit": texture])], withCompletionHandler: {})
         }
+        
         // Ground placeholder
         if SKTexture(imageNamed: "ground_8bit").size() == .zero {
             let size = CGSize(width: 256, height: 32)
@@ -142,6 +157,7 @@ class GameScene: SKScene {
             texture.filteringMode = .nearest
             SKTextureAtlas.preloadTextureAtlases([SKTextureAtlas(dictionary: ["ground_8bit": texture])], withCompletionHandler: {})
         }
+        
         // Sky placeholder
         if SKTexture(imageNamed: "sky_8bit").size() == .zero {
             let size = CGSize(width: 256, height: 128)
@@ -153,6 +169,22 @@ class GameScene: SKScene {
             let texture = SKTexture(image: image!)
             texture.filteringMode = .nearest
             SKTextureAtlas.preloadTextureAtlases([SKTextureAtlas(dictionary: ["sky_8bit": texture])], withCompletionHandler: {})
+        }
+        
+        // Obstacle placeholder
+        if SKTexture(imageNamed: "obstacle_8bit").size() == .zero {
+            let size = CGSize(width: 48, height: 48)
+            UIGraphicsBeginImageContextWithOptions(size, false, 0)
+            UIColor.systemGreen.setFill()
+            UIBezierPath(rect: CGRect(origin: .zero, size: size)).fill()
+            // Add some detail to make it look like a bush/obstacle
+            UIColor.darkGreen.setFill()
+            UIBezierPath(ovalIn: CGRect(x: 8, y: 8, width: 32, height: 32)).fill()
+            let image = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+            let texture = SKTexture(image: image!)
+            texture.filteringMode = .nearest
+            SKTextureAtlas.preloadTextureAtlases([SKTextureAtlas(dictionary: ["obstacle_8bit": texture])], withCompletionHandler: {})
         }
     }
 
@@ -176,6 +208,9 @@ class GameScene: SKScene {
         groundNode.position = CGPoint(x: size.width / 2, y: groundHeight / 2)
         groundNode.physicsBody = SKPhysicsBody(rectangleOf: groundNode.size)
         groundNode.physicsBody?.isDynamic = false
+        groundNode.physicsBody?.categoryBitMask = PhysicsCategory.ground
+        groundNode.physicsBody?.contactTestBitMask = PhysicsCategory.player
+        groundNode.zPosition = -10
         addChild(groundNode)
     }
 
@@ -190,9 +225,52 @@ class GameScene: SKScene {
         playerNode.position = CGPoint(x: size.width * 0.1, y: groundY + groundHeight / 2 + playerNode.size.height / 2 + 1)
         playerNode.physicsBody = SKPhysicsBody(rectangleOf: playerNode.size)
         playerNode.physicsBody?.allowsRotation = false
+        playerNode.physicsBody?.categoryBitMask = PhysicsCategory.player
+        playerNode.physicsBody?.contactTestBitMask = PhysicsCategory.obstacle | PhysicsCategory.ground
+        playerNode.physicsBody?.collisionBitMask = PhysicsCategory.ground
+        playerNode.zPosition = 10
         addChild(playerNode)
 
         self.playerController = playerNode
+    }
+    
+    private func addObstacles() {
+        guard let ground = childNode(withName: "ground") as? SKSpriteNode else { return }
+        
+        let obstacleTexture = SKTexture(imageNamed: "obstacle_8bit")
+        let obstacleSize = CGSize(width: 48, height: 48)
+        let groundTop = ground.position.y + ground.size.height / 2
+        
+        // Create obstacles at various intervals across the scene
+        let minSpacing: CGFloat = 150
+        let maxSpacing: CGFloat = 400
+        let startX: CGFloat = size.width * 0.3 // Start after player spawn area
+        let endX: CGFloat = size.width * 0.9
+        
+        var currentX = startX
+        var obstacleIndex = 0
+        
+        while currentX < endX && obstacleIndex < 8 { // Limit to reasonable number
+            let obstacle = SKSpriteNode(texture: obstacleTexture)
+            obstacle.name = "obstacle_\(obstacleIndex)"
+            obstacle.size = obstacleSize
+            obstacle.position = CGPoint(x: currentX, y: groundTop + obstacleSize.height / 2)
+            obstacle.zPosition = 5 // Above ground, below player
+            
+            // Set up physics body
+            obstacle.physicsBody = SKPhysicsBody(rectangleOf: obstacleSize)
+            obstacle.physicsBody?.isDynamic = false
+            obstacle.physicsBody?.categoryBitMask = PhysicsCategory.obstacle
+            obstacle.physicsBody?.contactTestBitMask = PhysicsCategory.player
+            obstacle.physicsBody?.collisionBitMask = PhysicsCategory.none
+            
+            addChild(obstacle)
+            
+            // Calculate next obstacle position with some randomness
+            let spacing = CGFloat.random(in: minSpacing...maxSpacing)
+            currentX += spacing
+            obstacleIndex += 1
+        }
     }
 
     private func addJoystickAndJumpButton() {
@@ -216,6 +294,20 @@ class GameScene: SKScene {
 
         jumpButton.onJumpReleased = { [weak self] in
             let _ = self?.playerController?.endJump()
+        }
+    }
+}
+
+// MARK: - SKPhysicsContactDelegate
+extension GameScene: SKPhysicsContactDelegate {
+    func didBegin(_ contact: SKPhysicsContact) {
+        let contactMask = contact.bodyA.categoryBitMask | contact.bodyB.categoryBitMask
+        
+        if contactMask == PhysicsCategory.player | PhysicsCategory.obstacle {
+            // Player collided with obstacle
+            if let player = (contact.bodyA.categoryBitMask == PhysicsCategory.player ? contact.bodyA.node : contact.bodyB.node) as? PlayerController {
+                player.handleObstacleCollision()
+            }
         }
     }
 }
