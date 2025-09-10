@@ -237,19 +237,14 @@ class BasicObstacleTests: XCTestCase {
         }
         
         // Record initial state
-        let initialMoveSpeed = player.value(forKey: "moveSpeed") as? CGFloat ?? 20.0
+        let initialMoveSpeed = player.currentMovementSpeed
         
-        // Act - Simulate obstacle collision (this would call a method like handleObstacleCollision())
-        // For now we test that such a method should exist and affect player speed
+        // Act - Simulate obstacle collision
+        player.handleObstacleCollision()
         
-        // Assert - After implementing, the player should have reduced speed or penalty state
-        // This test defines the expected behavior that the implementation should satisfy
-        XCTAssertTrue(true, "Test placeholder - collision should trigger penalty when implemented")
-        
-        // Expected behavior after implementation:
-        // XCTAssertLessThan(player.currentMoveSpeed, initialMoveSpeed, "Player speed should be reduced after obstacle collision")
-        // OR
-        // XCTAssertTrue(player.isPenalized, "Player should be in penalized state after obstacle collision")
+        // Assert - Player should have reduced speed or penalty state
+        XCTAssertTrue(player.isCurrentlyPenalized, "Player should be in penalized state after obstacle collision")
+        XCTAssertLessThan(player.currentMovementSpeed, initialMoveSpeed, "Player speed should be reduced after obstacle collision")
     }
     
     func test_When_PlayerIsSlowedByObstacle_Should_RecoverAfterTime() {
@@ -263,20 +258,16 @@ class BasicObstacleTests: XCTestCase {
         }
         
         // Act - Simulate collision penalty and recovery time passage
-        // This test defines expected behavior for penalty recovery
+        player.handleObstacleCollision()
+        XCTAssertTrue(player.isCurrentlyPenalized, "Player should be penalized immediately after collision")
         
-        // Assert - Expected behavior after implementation:
-        XCTAssertTrue(true, "Test placeholder - player should recover from slowdown after time")
+        // Simulate time passage for recovery (3 seconds at 60 FPS = 180 frames)
+        for _ in 0..<180 {
+            player.updateMovement()
+        }
         
-        // Expected behavior after implementation:
-        // player.handleObstacleCollision()
-        // XCTAssertTrue(player.isPenalized, "Player should be penalized immediately after collision")
-        // 
-        // // Simulate time passage for recovery
-        // for _ in 0..<180 { // 3 seconds at 60 FPS
-        //     player.updateMovement()
-        // }
-        // XCTAssertFalse(player.isPenalized, "Player should recover from penalty after sufficient time")
+        // Assert - Player should recover from penalty after sufficient time
+        XCTAssertFalse(player.isCurrentlyPenalized, "Player should recover from penalty after sufficient time")
     }
     
     // MARK: - Edge Case Tests
@@ -292,17 +283,13 @@ class BasicObstacleTests: XCTestCase {
         }
         
         // Act - Simulate multiple rapid collisions
-        // This test ensures the collision system doesn't break with rapid collisions
+        for _ in 0..<10 {
+            player.handleObstacleCollision()
+        }
         
-        // Assert
-        XCTAssertTrue(true, "Test placeholder - multiple rapid collisions should be handled gracefully")
-        
-        // Expected behavior after implementation:
-        // for _ in 0..<10 {
-        //     player.handleObstacleCollision()
-        // }
-        // XCTAssertTrue(player.isPenalized, "Player should still be in penalized state after multiple collisions")
-        // XCTAssertNotNil(player.physicsBody, "Player physics body should remain intact after multiple collisions")
+        // Assert - Player should still be in penalized state and physics intact
+        XCTAssertTrue(player.isCurrentlyPenalized, "Player should still be in penalized state after multiple collisions")
+        XCTAssertNotNil(player.physicsBody, "Player physics body should remain intact after multiple collisions")
     }
     
     func test_When_PlayerCollidesAtObstacleBoundary_Should_DetectAccurately() {
@@ -486,11 +473,14 @@ class BasicObstacleTests: XCTestCase {
         
         // Act & Assert
         // Check that physics bodies are configured to interact
-        XCTAssertNotNil(playerPhysics.categoryBitMask, "Player should have category bit mask")
-        XCTAssertNotNil(obstaclePhysics.categoryBitMask, "Obstacle should have category bit mask")
+        XCTAssertNotEqual(playerPhysics.categoryBitMask, 0, "Player should have category bit mask")
+        XCTAssertNotEqual(obstaclePhysics.categoryBitMask, 0, "Obstacle should have category bit mask")
         
-        // The implementation should ensure these bit masks allow collision detection
-        XCTAssertTrue(true, "Physics bodies should be configured for collision detection")
+        // Verify specific physics categories are set correctly
+        XCTAssertTrue(playerPhysics.contactTestBitMask & obstaclePhysics.categoryBitMask != 0, 
+                     "Player should be configured to detect contact with obstacles")
+        XCTAssertTrue(obstaclePhysics.contactTestBitMask & playerPhysics.categoryBitMask != 0, 
+                     "Obstacle should be configured to detect contact with player")
     }
     
     // MARK: - Performance and Memory Tests
