@@ -8,6 +8,15 @@ class PlayerController: SKSpriteNode {
     private let deceleration: CGFloat = 1.5
     private let skidThreshold: CGFloat = 10.0
     private let skidDuration: CGFloat = 0.15 // seconds
+    
+    // Obstacle collision penalty system
+    private let penaltySlowdownFactor: CGFloat = 0.3 // 30% of normal speed
+    private let penaltyDuration: CGFloat = 3.0 // 3 seconds
+    private var isPenalized: Bool = false
+    private var penaltyTimeLeft: CGFloat = 0.0
+    private var currentMoveSpeed: CGFloat = 20.0
+    private var currentJumpPenalty: CGFloat = 0.0
+    
     private var isGrounded: Bool {
         // Consider grounded if vertical velocity is near zero and
         // node is on a node with a "ground" or "platform" category
@@ -33,6 +42,17 @@ class PlayerController: SKSpriteNode {
     }
     
     func updateMovement() {
+        // Update penalty system
+        if isPenalized {
+            penaltyTimeLeft -= 1.0 / 60.0 // Assume 60 FPS for simplicity
+
+            if penaltyTimeLeft <= 0 {
+                isPenalized = false
+                currentMoveSpeed = moveSpeed
+                currentJumpPenalty = 0.0
+            }
+        }
+        
         // Skid logic
         if isSkidding {
             skidTimeLeft -= 1.0 / 60.0 // Assume 60 FPS for simplicity
@@ -50,8 +70,8 @@ class PlayerController: SKSpriteNode {
                 isSkidding = false
             }
         } else {
-            // Normal movement
-            let targetSpeed = horizontalInput * moveSpeed
+            // Normal movement (affected by penalty)
+            let targetSpeed = horizontalInput * currentMoveSpeed
             if abs(horizontalInput) > 0.01 {
                 // Accelerate toward target speed
                 let delta = targetSpeed - velocityX
@@ -74,9 +94,13 @@ class PlayerController: SKSpriteNode {
         position.x += velocityX
         // Variable jump height logic
         if isJumping, let body = physicsBody, body.velocity.dy > 0 {
-            let newVelocity = min(body.velocity.dy + 50, maxJumpVelocity)
+            let penalizedMaxJumpVelocity = maxJumpVelocity * (1 - currentJumpPenalty)
+            let jumpIncrement = 50 * (1 - currentJumpPenalty)
+            let newVelocity = min(body.velocity.dy + jumpIncrement, penalizedMaxJumpVelocity)
+            
             body.velocity.dy = newVelocity
-            if newVelocity > maxJumpVelocity - 30 {
+            
+            if newVelocity > penalizedMaxJumpVelocity - 30 {
                 isJumping = false
             }
         }
@@ -85,7 +109,7 @@ class PlayerController: SKSpriteNode {
     /// Initiates a jump if the player is grounded.
     func startJump() -> Bool {
         guard isGrounded else { return false }
-        physicsBody?.velocity.dy = initialJumpVelocity
+        physicsBody?.velocity.dy = initialJumpVelocity * (1 - currentJumpPenalty)
         isJumping = true
         return true
     }
@@ -105,5 +129,28 @@ class PlayerController: SKSpriteNode {
         pos.x = max(minX, min(maxX, pos.x))
         pos.y = max(minY, min(maxY, pos.y))
         position = pos
+    }
+    
+    // MARK: - Obstacle Collision System
+    
+    /// Handles collision with an obstacle, applying penalty effects
+    func handleObstacleCollision() {
+        // Apply penalty if not already penalized
+        if !isPenalized {
+            isPenalized = true
+            penaltyTimeLeft = penaltyDuration
+            currentMoveSpeed = moveSpeed * penaltySlowdownFactor
+            currentJumpPenalty = 0.15
+        }
+    }
+    
+    /// Returns whether the player is currently penalized from obstacle collision
+    var isCurrentlyPenalized: Bool {
+        return isPenalized
+    }
+    
+    /// Returns the current movement speed (may be reduced due to penalty)
+    var currentMovementSpeed: CGFloat {
+        return currentMoveSpeed
     }
 }
