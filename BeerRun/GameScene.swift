@@ -178,7 +178,7 @@ class GameScene: SKScene {
             UIColor.systemGreen.setFill()
             UIBezierPath(rect: CGRect(origin: .zero, size: size)).fill()
             // Add some detail to make it look like a bush/obstacle
-            UIColor.darkGreen.setFill()
+            UIColor.init(red: 0.25, green: 0.5, blue: 0.33, alpha: 1).setFill()
             UIBezierPath(ovalIn: CGRect(x: 8, y: 8, width: 32, height: 32)).fill()
             let image = UIGraphicsGetImageFromCurrentImageContext()
             UIGraphicsEndImageContext()

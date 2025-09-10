@@ -15,6 +15,7 @@ class PlayerController: SKSpriteNode {
     private var isPenalized: Bool = false
     private var penaltyTimeLeft: CGFloat = 0.0
     private var currentMoveSpeed: CGFloat = 20.0
+    private var currentJumpPenalty: CGFloat = 0.0
     
     private var isGrounded: Bool {
         // Consider grounded if vertical velocity is near zero and
@@ -44,14 +45,12 @@ class PlayerController: SKSpriteNode {
         // Update penalty system
         if isPenalized {
             penaltyTimeLeft -= 1.0 / 60.0 // Assume 60 FPS for simplicity
-            currentMoveSpeed = moveSpeed * penaltySlowdownFactor
-            
+
             if penaltyTimeLeft <= 0 {
                 isPenalized = false
                 currentMoveSpeed = moveSpeed
+                currentJumpPenalty = 0.0
             }
-        } else {
-            currentMoveSpeed = moveSpeed
         }
         
         // Skid logic
@@ -95,9 +94,13 @@ class PlayerController: SKSpriteNode {
         position.x += velocityX
         // Variable jump height logic
         if isJumping, let body = physicsBody, body.velocity.dy > 0 {
-            let newVelocity = min(body.velocity.dy + 50, maxJumpVelocity)
+            let penalizedMaxJumpVelocity = maxJumpVelocity * (1 - currentJumpPenalty)
+            let jumpIncrement = 50 * (1 - currentJumpPenalty)
+            let newVelocity = min(body.velocity.dy + jumpIncrement, penalizedMaxJumpVelocity)
+            
             body.velocity.dy = newVelocity
-            if newVelocity > maxJumpVelocity - 30 {
+            
+            if newVelocity > penalizedMaxJumpVelocity - 30 {
                 isJumping = false
             }
         }
@@ -106,7 +109,7 @@ class PlayerController: SKSpriteNode {
     /// Initiates a jump if the player is grounded.
     func startJump() -> Bool {
         guard isGrounded else { return false }
-        physicsBody?.velocity.dy = initialJumpVelocity
+        physicsBody?.velocity.dy = initialJumpVelocity * (1 - currentJumpPenalty)
         isJumping = true
         return true
     }
@@ -137,6 +140,7 @@ class PlayerController: SKSpriteNode {
             isPenalized = true
             penaltyTimeLeft = penaltyDuration
             currentMoveSpeed = moveSpeed * penaltySlowdownFactor
+            currentJumpPenalty = 0.15
         }
     }
     

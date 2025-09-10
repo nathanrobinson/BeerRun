@@ -262,7 +262,7 @@ class BasicObstacleTests: XCTestCase {
         XCTAssertTrue(player.isCurrentlyPenalized, "Player should be penalized immediately after collision")
         
         // Simulate time passage for recovery (3 seconds at 60 FPS = 180 frames)
-        for _ in 0..<180 {
+        for _ in 0...180 {
             player.updateMovement()
         }
         
